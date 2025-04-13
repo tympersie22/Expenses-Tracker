@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   BanknotesIcon,
   PlusCircleIcon,
@@ -11,6 +11,24 @@ import {
 } from '@heroicons/react/24/outline';
 import AddAccountModal from '../../components/AddAccountModal';
 import AccountDetails from '../../components/AccountDetails';
+import ClientOnly from '../../components/ClientOnly';
+import dynamic from 'next/dynamic';
+
+// Dynamically import PlaidLink with no SSR to avoid hydration errors
+const PlaidLink = dynamic(() => import('../../components/PlaidLink'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full">
+      <button
+        disabled
+        className="flex items-center justify-center gap-2 w-full bg-gray-400 text-white py-2 px-4 rounded-lg cursor-not-allowed transition-colors"
+      >
+        <ArrowPathIcon className="w-5 h-5" />
+        <span className="text-sm font-medium">Loading...</span>
+      </button>
+    </div>
+  ),
+});
 
 interface Account {
   id: string;
@@ -114,6 +132,70 @@ export default function AccountsPage() {
     setSelectedAccount(null);
   };
 
+  const handlePlaidSuccess = async (public_token: string, metadata: any) => {
+    console.log('Bank connected successfully!', { public_token, metadata });
+    console.log('Institution name:', metadata.institution.name);
+    console.log('Institution ID:', metadata.institution.institution_id);
+    
+    try {
+      console.log('Sending public token to exchange-token API...');
+      // Exchange the public token for an access token and get account data
+      const response = await fetch('/api/exchange-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ public_token }),
+      });
+      
+      console.log('API response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Plaid data received:', data);
+      
+      if (data.accounts && data.accounts.length > 0) {
+        console.log('Number of accounts received:', data.accounts.length);
+        // Convert Plaid accounts to our app's account format
+        const newAccounts = data.accounts.map((plaidAccount: any) => {
+          console.log('Processing account:', plaidAccount.name, plaidAccount.account_id);
+          return {
+            id: plaidAccount.account_id,
+            name: plaidAccount.name,
+            type: plaidAccount.type === 'credit' ? 'credit' : 
+                  plaidAccount.subtype === 'savings' ? 'savings' : 'checking',
+            balance: plaidAccount.balances.current || 0,
+            currency: 'USD',
+            lastUpdated: new Date(),
+          };
+        });
+        
+        console.log('Converted accounts:', newAccounts);
+        
+        // Add the new accounts to the existing accounts
+        setAccounts([...accounts, ...newAccounts]);
+        
+        // Show a success message
+        alert(`Successfully connected ${metadata.institution.name}! Added ${newAccounts.length} accounts.`);
+      } else {
+        console.log('No accounts found in the response');
+        alert('No accounts found in the connected bank.');
+      }
+    } catch (error) {
+      console.error('Error processing Plaid connection:', error);
+      alert('Failed to process bank connection. Please try again.');
+    }
+  };
+
+  const handlePlaidExit = (err: any, metadata: any) => {
+    console.log('User exited Plaid flow', { err, metadata });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header with total balance */}
@@ -127,7 +209,7 @@ export default function AccountsPage() {
 
       {/* Quick Actions */}
       <div className="p-4">
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="flex items-center justify-center gap-2 bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
@@ -135,10 +217,28 @@ export default function AccountsPage() {
             <PlusCircleIcon className="w-5 h-5 text-blue-600" />
             <span className="text-sm font-medium">Add Account</span>
           </button>
-          <button className="flex items-center justify-center gap-2 bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
-            <ArrowPathIcon className="w-5 h-5 text-blue-600" />
-            <span className="text-sm font-medium">Sync Accounts</span>
-          </button>
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <h3 className="text-sm font-medium mb-2">Connect your bank</h3>
+            <ClientOnly
+              fallback={
+                <div className="w-full">
+                  <button
+                    disabled
+                    className="flex items-center justify-center gap-2 w-full bg-gray-400 text-white py-2 px-4 rounded-lg cursor-not-allowed transition-colors"
+                  >
+                    <ArrowPathIcon className="w-5 h-5" />
+                    <span className="text-sm font-medium">Loading...</span>
+                  </button>
+                </div>
+              }
+            >
+              <PlaidLink 
+                key="plaid-link-component" 
+                onSuccess={handlePlaidSuccess} 
+                onExit={handlePlaidExit} 
+              />
+            </ClientOnly>
+          </div>
         </div>
 
         {/* Account List */}

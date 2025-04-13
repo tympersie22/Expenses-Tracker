@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronDownIcon, PlusIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
@@ -12,30 +12,41 @@ interface ExpenseSummary {
   previousLabel: string;
 }
 
+const initialSummaries: ExpenseSummary[] = [
+  {
+    title: 'Spent Today',
+    amount: 64.30,
+    previousAmount: 72.50,
+    percentageChange: -11,
+    previousLabel: 'Yesterday',
+  },
+  {
+    title: 'Spent This Week',
+    amount: 410.60,
+    previousAmount: 498.00,
+    percentageChange: -18,
+    previousLabel: 'Last Week',
+  },
+  {
+    title: 'Spent This Month',
+    amount: 1025.90,
+    previousAmount: 2045.00,
+    percentageChange: -41,
+    previousLabel: 'Last Month',
+  },
+];
+
 export default function Home() {
-  const [summaries] = useState<ExpenseSummary[]>([
-    {
-      title: 'Spent Today',
-      amount: 64.30,
-      previousAmount: 72.50,
-      percentageChange: -11,
-      previousLabel: 'Yesterday',
-    },
-    {
-      title: 'Spent This Week',
-      amount: 410.60,
-      previousAmount: 498.00,
-      percentageChange: -18,
-      previousLabel: 'Last Week',
-    },
-    {
-      title: 'Spent This Month',
-      amount: 1025.90,
-      previousAmount: 2045.00,
-      percentageChange: -41,
-      previousLabel: 'Last Month',
-    },
-  ]);
+  const [mounted, setMounted] = useState(false);
+  const [summaries] = useState<ExpenseSummary[]>(initialSummaries);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen">

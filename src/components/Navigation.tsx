@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -7,10 +8,16 @@ import {
   UserCircleIcon,
   ClockIcon,
   CreditCardIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
 
 export default function Navigation() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const isActive = (path: string) => pathname === path;
 
@@ -18,8 +25,13 @@ export default function Navigation() {
     { href: '/accounts', icon: CreditCardIcon, label: 'Accounts' },
     { href: '/wallets', icon: WalletIcon, label: 'Wallets' },
     { href: '/history', icon: ClockIcon, label: 'History' },
+    { href: '/analytics', icon: ChartBarIcon, label: 'Analytics' },
     { href: '/profile', icon: UserCircleIcon, label: 'Profile' },
   ];
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t">
