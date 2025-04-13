@@ -1,149 +1,167 @@
 'use client';
 
-import { Fragment, useState } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useState } from 'react';
+import { XMarkIcon, CreditCardIcon, QrCodeIcon, BuildingLibraryIcon } from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
+import BankLinkButton from './BankLinkButton';
 
 interface AddAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddAccount: (account: {
-    name: string;
-    type: 'checking' | 'savings' | 'credit';
-    initialBalance: number;
-  }) => void;
 }
 
-export default function AddAccountModal({ isOpen, onClose, onAddAccount }: AddAccountModalProps) {
-  const [formData, setFormData] = useState<{
-    name: string;
-    type: 'checking' | 'savings' | 'credit';
-    initialBalance: string;
-  }>({
-    name: '',
-    type: 'checking',
-    initialBalance: '',
-  });
+export default function AddAccountModal({ isOpen, onClose }: AddAccountModalProps) {
+  const [selectedOption, setSelectedOption] = useState<'bank' | 'card' | 'manual' | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onAddAccount({
-      name: formData.name,
-      type: formData.type,
-      initialBalance: parseFloat(formData.initialBalance) || 0,
-    });
-    setFormData({ name: '', type: 'checking', initialBalance: '' });
-    onClose();
-  };
+  const options = [
+    {
+      id: 'bank',
+      title: 'Connect Bank Account',
+      description: 'Securely link your bank account using Plaid',
+      icon: BuildingLibraryIcon,
+      action: () => setSelectedOption('bank'),
+    },
+    {
+      id: 'card',
+      title: 'Scan Card',
+      description: 'Scan your credit or debit card',
+      icon: CreditCardIcon,
+      action: () => setSelectedOption('card'),
+    },
+    {
+      id: 'manual',
+      title: 'Manual Entry',
+      description: 'Add account details manually',
+      icon: QrCodeIcon,
+      action: () => setSelectedOption('manual'),
+    },
+  ];
 
   return (
-    <Transition.Root show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          onClick={onClose}
         >
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
-        </Transition.Child>
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="bg-white rounded-2xl w-full max-w-md overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-semibold">Add New Account</h2>
+                <button
+                  onClick={onClose}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
+              </div>
 
-        <div className="fixed inset-0 z-10 overflow-y-auto">
-          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-              enterTo="opacity-100 translate-y-0 sm:scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            >
-              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
-                <div className="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
-                  <button
-                    type="button"
-                    className="rounded-md bg-white text-gray-400 hover:text-gray-500"
-                    onClick={onClose}
+              <div className="space-y-4">
+                {options.map((option) => (
+                  <motion.button
+                    key={option.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full p-4 border rounded-xl hover:border-gray-400 transition-colors flex items-start gap-4"
+                    onClick={option.action}
                   >
-                    <span className="sr-only">Close</span>
-                    <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                    <div className="p-3 bg-gray-100 rounded-lg">
+                      <option.icon className="w-6 h-6" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-medium">{option.title}</h3>
+                      <p className="text-sm text-gray-500">{option.description}</p>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            {selectedOption === 'bank' && (
+              <div className="p-6 border-t">
+                <BankLinkButton />
+              </div>
+            )}
+
+            {selectedOption === 'card' && (
+              <div className="p-6 border-t">
+                <div className="text-center">
+                  <p className="text-gray-600 mb-4">Card scanning feature coming soon!</p>
+                  <button
+                    onClick={() => setSelectedOption(null)}
+                    className="text-sm text-gray-500 hover:text-gray-700"
+                  >
+                    Go back
                   </button>
                 </div>
-                <div className="sm:flex sm:items-start">
-                  <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                    <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-gray-900">
-                      Add New Account
-                    </Dialog.Title>
-                    <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-                      <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                          Account Name
-                        </label>
-                        <input
-                          type="text"
-                          id="name"
-                          value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="type" className="block text-sm font-medium text-gray-700">
-                          Account Type
-                        </label>
-                        <select
-                          id="type"
-                          value={formData.type}
-                          onChange={(e) => setFormData({ ...formData, type: e.target.value as 'checking' | 'savings' | 'credit' })}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        >
-                          <option value="checking">Checking</option>
-                          <option value="savings">Savings</option>
-                          <option value="credit">Credit Card</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label htmlFor="initialBalance" className="block text-sm font-medium text-gray-700">
-                          Initial Balance
-                        </label>
-                        <input
-                          type="number"
-                          id="initialBalance"
-                          value={formData.initialBalance}
-                          onChange={(e) => setFormData({ ...formData, initialBalance: e.target.value })}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                          step="0.01"
-                          required
-                        />
-                      </div>
-                      <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                        <button
-                          type="submit"
-                          className="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
-                        >
-                          Add Account
-                        </button>
-                        <button
-                          type="button"
-                          className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-                          onClick={onClose}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </form>
+              </div>
+            )}
+
+            {selectedOption === 'manual' && (
+              <div className="p-6 border-t">
+                <form className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Account Name
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                      placeholder="e.g., My Checking Account"
+                    />
                   </div>
-                </div>
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
-        </div>
-      </Dialog>
-    </Transition.Root>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Account Type
+                    </label>
+                    <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent">
+                      <option value="checking">Checking</option>
+                      <option value="savings">Savings</option>
+                      <option value="credit">Credit Card</option>
+                      <option value="investment">Investment</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Initial Balance
+                    </label>
+                    <input
+                      type="number"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                      placeholder="0.00"
+                      step="0.01"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedOption(null)}
+                      className="flex-1 p-3 border rounded-lg hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 p-3 bg-black text-white rounded-lg hover:bg-gray-800"
+                    >
+                      Add Account
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 } 

@@ -8,6 +8,7 @@ import {
   ArrowPathIcon,
   ChevronRightIcon,
   XMarkIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 import AddAccountModal from '../../components/AddAccountModal';
 import AccountDetails from '../../components/AccountDetails';
@@ -33,7 +34,7 @@ const PlaidLink = dynamic(() => import('../../components/PlaidLink'), {
 interface Account {
   id: string;
   name: string;
-  type: 'checking' | 'savings' | 'credit';
+  type: 'checking' | 'savings' | 'credit' | 'investment';
   balance: number;
   currency: string;
   lastUpdated: Date;
@@ -56,7 +57,7 @@ export default function AccountsPage() {
       id: '1',
       name: 'Main Checking',
       type: 'checking',
-      balance: 5240.50,
+      balance: 2500.00,
       currency: 'USD',
       lastUpdated: new Date(),
     },
@@ -64,15 +65,7 @@ export default function AccountsPage() {
       id: '2',
       name: 'Savings',
       type: 'savings',
-      balance: 12750.75,
-      currency: 'USD',
-      lastUpdated: new Date(),
-    },
-    {
-      id: '3',
-      name: 'Credit Card',
-      type: 'credit',
-      balance: -450.25,
+      balance: 10000.00,
       currency: 'USD',
       lastUpdated: new Date(),
     },
@@ -108,20 +101,14 @@ export default function AccountsPage() {
 
   const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
 
-  const handleAddAccount = (newAccount: {
-    name: string;
-    type: 'checking' | 'savings' | 'credit';
-    initialBalance: number;
-  }) => {
-    const account: Account = {
+  const handleAddAccount = (account: Omit<Account, 'id' | 'currency'>) => {
+    const newAccount: Account = {
+      ...account,
       id: Date.now().toString(),
-      name: newAccount.name,
-      type: newAccount.type,
-      balance: newAccount.initialBalance,
       currency: 'USD',
       lastUpdated: new Date(),
     };
-    setAccounts([...accounts, account]);
+    setAccounts([...accounts, newAccount]);
   };
 
   const handleAccountClick = (account: Account) => {
@@ -198,108 +185,44 @@ export default function AccountsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header with total balance */}
-      <div className="bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold mb-2">Accounts</h1>
-        <div className="flex items-baseline gap-2">
-          <p className="text-3xl font-bold">${totalBalance.toFixed(2)}</p>
-          <p className="text-gray-500">Total Balance</p>
-        </div>
-      </div>
+      <header className="bg-white p-4 border-b">
+        <h1 className="text-2xl font-semibold">My Accounts</h1>
+      </header>
 
-      {/* Quick Actions */}
-      <div className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center justify-center gap-2 bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
-          >
-            <PlusCircleIcon className="w-5 h-5 text-blue-600" />
-            <span className="text-sm font-medium">Add Account</span>
-          </button>
-          <div className="bg-white p-4 rounded-lg shadow-sm">
-            <h3 className="text-sm font-medium mb-2">Connect your bank</h3>
-            <ClientOnly
-              fallback={
-                <div className="w-full">
-                  <button
-                    disabled
-                    className="flex items-center justify-center gap-2 w-full bg-gray-400 text-white py-2 px-4 rounded-lg cursor-not-allowed transition-colors"
-                  >
-                    <ArrowPathIcon className="w-5 h-5" />
-                    <span className="text-sm font-medium">Loading...</span>
-                  </button>
-                </div>
-              }
-            >
-              <PlaidLink 
-                key="plaid-link-component" 
-                onSuccess={handlePlaidSuccess} 
-                onExit={handlePlaidExit} 
-              />
-            </ClientOnly>
-          </div>
-        </div>
-
-        {/* Account List */}
-        <div className="space-y-4">
+      <main className="p-4">
+        <div className="grid gap-4">
           {accounts.map((account) => (
             <div
               key={account.id}
-              onClick={() => handleAccountClick(account)}
-              className={`bg-white p-4 rounded-lg shadow-sm flex items-center cursor-pointer transition-all ${
-                selectedAccount?.id === account.id
-                  ? 'ring-2 ring-blue-500 bg-blue-50'
-                  : 'hover:bg-gray-50'
-              }`}
+              className="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow"
             >
-              <div className="p-2 rounded-full bg-blue-100 mr-4">
-                {account.type === 'credit' ? (
-                  <CreditCardIcon className="w-6 h-6 text-blue-600" />
-                ) : (
-                  <BanknotesIcon className="w-6 h-6 text-blue-600" />
-                )}
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="font-medium">{account.name}</h2>
+                  <p className="text-sm text-gray-500 capitalize">{account.type}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold">
+                    {account.currency} {account.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="font-medium">{account.name}</h3>
-                <p className="text-sm text-gray-500 capitalize">{account.type}</p>
-              </div>
-              <div className="text-right">
-                <p className={`font-semibold ${account.balance < 0 ? 'text-red-600' : 'text-gray-900'}`}>
-                  ${Math.abs(account.balance).toFixed(2)}
-                </p>
-                <p className="text-xs text-gray-500">
-                  Last updated: {account.lastUpdated.toLocaleDateString()}
-                </p>
-              </div>
-              <ChevronRightIcon className="w-5 h-5 text-gray-400 ml-4" />
             </div>
           ))}
         </div>
 
-        {/* Account Details */}
-        {selectedAccount && (
-          <div className="mt-8 relative">
-            <button
-              onClick={handleCloseDetails}
-              className="absolute -top-2 -right-2 p-1 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors"
-            >
-              <XMarkIcon className="w-5 h-5 text-gray-500" />
-            </button>
-            <AccountDetails
-              account={selectedAccount}
-              transactions={transactions}
-            />
-          </div>
-        )}
-      </div>
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="fixed bottom-20 right-4 bg-black text-white p-4 rounded-full shadow-lg hover:bg-gray-800 transition-colors"
+        >
+          <PlusIcon className="w-6 h-6" />
+        </button>
 
-      {/* Add Account Modal */}
-      <AddAccountModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onAddAccount={handleAddAccount}
-      />
+        <AddAccountModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+        />
+      </main>
     </div>
   );
 } 
