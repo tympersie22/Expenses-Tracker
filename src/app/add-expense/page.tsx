@@ -1,128 +1,115 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { motion } from 'framer-motion';
+import {
+  ArrowLeftIcon,
+  PlusIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import { useNavigation } from '@/contexts/NavigationContext';
 
 export default function AddExpensePage() {
-  const router = useRouter();
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [wallet, setWallet] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigation = useNavigation();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newExpense, setNewExpense] = useState({
+    description: '',
+    amount: '',
+    category: '',
+    date: '',
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      // Here you would typically make an API call to save the expense
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated API call
-      router.push('/');
-    } catch (error) {
-      console.error('Error adding expense:', error);
-      alert('Failed to add expense. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Handle form submission
+    setIsModalOpen(false);
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="p-4 flex items-center border-b">
-        <button onClick={() => router.back()} className="mr-4">
-          <ArrowLeftIcon className="w-6 h-6" />
-        </button>
-        <h1 className="text-xl font-semibold">Add Expense</h1>
-      </header>
-
-      <form onSubmit={handleSubmit} className="p-4 space-y-6">
-        <div className="space-y-2">
-          <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
-            Amount
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-            <input
-              type="number"
-              id="amount"
-              step="0.01"
-              required
-              className="block w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              disabled={isSubmitting}
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-            Description
-          </label>
-          <input
-            type="text"
-            id="description"
-            required
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="What did you spend on?"
-            disabled={isSubmitting}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-            Category
-          </label>
-          <select
-            id="category"
-            required
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            disabled={isSubmitting}
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center mb-8">
+          <button
+            onClick={navigation.handleBack}
+            className="flex items-center text-gray-300 hover:text-white transition-colors"
           >
-            <option value="">Select a category</option>
-            <option value="food">Food & Drinks</option>
-            <option value="transport">Transportation</option>
-            <option value="shopping">Shopping</option>
-            <option value="entertainment">Entertainment</option>
-            <option value="bills">Bills & Utilities</option>
-            <option value="other">Other</option>
-          </select>
+            <ArrowLeftIcon className="h-6 w-6 mr-2" />
+            Back
+          </button>
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="wallet" className="block text-sm font-medium text-gray-700">
-            Wallet
-          </label>
-          <select
-            id="wallet"
-            required
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
-            value={wallet}
-            onChange={(e) => setWallet(e.target.value)}
-            disabled={isSubmitting}
-          >
-            <option value="">Select a wallet</option>
-            <option value="cash">Cash</option>
-            <option value="bank">Bank Account</option>
-            <option value="savings">Savings</option>
-          </select>
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-black text-white py-3 px-4 rounded-md hover:bg-gray-900 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-          disabled={isSubmitting}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-gray-800 rounded-xl p-6 shadow-lg"
         >
-          {isSubmitting ? 'Adding...' : 'Add Expense'}
-        </button>
-      </form>
+          <h1 className="text-3xl font-bold mb-6">Add New Expense</h1>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Description
+              </label>
+              <input
+                type="text"
+                value={newExpense.description}
+                onChange={(e) =>
+                  setNewExpense({ ...newExpense, description: e.target.value })
+                }
+                className="w-full px-4 py-2 bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                placeholder="Enter expense description"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Amount
+              </label>
+              <input
+                type="number"
+                value={newExpense.amount}
+                onChange={(e) =>
+                  setNewExpense({ ...newExpense, amount: e.target.value })
+                }
+                className="w-full px-4 py-2 bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                placeholder="Enter amount"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Category
+              </label>
+              <input
+                type="text"
+                value={newExpense.category}
+                onChange={(e) =>
+                  setNewExpense({ ...newExpense, category: e.target.value })
+                }
+                className="w-full px-4 py-2 bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                placeholder="Enter category"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Date
+              </label>
+              <input
+                type="date"
+                value={newExpense.date}
+                onChange={(e) =>
+                  setNewExpense({ ...newExpense, date: e.target.value })
+                }
+                className="w-full px-4 py-2 bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Add Expense
+            </button>
+          </form>
+        </motion.div>
+      </div>
     </div>
   );
 } 

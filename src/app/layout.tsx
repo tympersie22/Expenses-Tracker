@@ -1,8 +1,7 @@
-import React from 'react';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import "./globals.css";
-import NavigationWrapper from '../components/NavigationWrapper';
+import MainContent from '@/components/MainContent';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,10 +18,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-gray-50`}>
-        <main className="min-h-screen max-w-md mx-auto bg-white pb-20">
+        <MainContent>
           {children}
-          <NavigationWrapper />
-        </main>
+        </MainContent>
       </body>
     </html>
   );
