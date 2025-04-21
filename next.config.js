@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   // Ensure environment variables are properly exposed to the client
   env: {
     PLAID_ENV: process.env.PLAID_ENV,

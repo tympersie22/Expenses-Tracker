@@ -1,55 +1,55 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  WalletIcon,
-  UserCircleIcon,
-  ClockIcon,
-  CreditCardIcon,
-  ChartBarIcon,
-} from '@heroicons/react/24/outline';
+import Link from 'next/link';
+import { Home, Wallet, History, User } from 'lucide-react';
+
+const navItems = [
+  {
+    label: 'Accounts',
+    href: '/accounts',
+    icon: Home,
+  },
+  {
+    label: 'Wallets',
+    href: '/wallets',
+    icon: Wallet,
+  },
+  {
+    label: 'History',
+    href: '/history',
+    icon: History,
+  },
+  {
+    label: 'Profile',
+    href: '/profile',
+    icon: User,
+  },
+];
 
 export default function Navigation() {
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const isActive = (path: string) => pathname === path;
-
-  const navItems = [
-    { href: '/accounts', icon: CreditCardIcon, label: 'Accounts' },
-    { href: '/wallets', icon: WalletIcon, label: 'Wallets' },
-    { href: '/history', icon: ClockIcon, label: 'History' },
-    { href: '/analytics', icon: ChartBarIcon, label: 'Analytics' },
-    { href: '/profile', icon: UserCircleIcon, label: 'Profile' },
-  ];
-
-  if (!mounted) {
-    return null;
-  }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t">
-      <div className="flex justify-around items-center p-3">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex flex-col items-center p-2 ${
-              isActive(item.href)
-                ? 'text-black'
-                : 'text-gray-500 hover:text-gray-900'
-            }`}
-          >
-            <item.icon className="w-6 h-6" />
-            <span className="text-xs mt-1">{item.label}</span>
-          </Link>
-        ))}
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+      <div className="max-w-md mx-auto flex justify-around items-center h-16">
+        {navItems.map((item) => {
+          const isActive = pathname === item.href;
+          const Icon = item.icon;
+          
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center justify-center w-full h-full ${
+                isActive ? 'text-indigo-600' : 'text-gray-500'
+              }`}
+            >
+              <Icon className="w-6 h-6" />
+              <span className="text-xs mt-1">{item.label}</span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );
