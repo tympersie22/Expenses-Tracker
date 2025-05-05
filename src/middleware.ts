@@ -1,50 +1,49 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { verifyToken } from './lib/auth';
 
-// Define public routes that don't require authentication
-const publicRoutes = ["/", "/login", "/register", "/forgot-password"];
+// Add paths that don't require authentication
+const publicPaths = ['/login', '/signup', '/forgot-password', '/api/auth/login', '/api/auth/signup'];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Check if the current path is a public route
-  const isPublicRoute = publicRoutes.includes(pathname);
+  // Check if the path is public
+  if (publicPaths.some(path => pathname.startsWith(path))) {
+    return NextResponse.next();
+  }
   
-  // Get the token from cookies
+  // Get the token from the cookie
   const token = request.cookies.get("token")?.value;
   
-  // If the user is on the root path, redirect to login if not authenticated
-  if (pathname === "/") {
-    if (token) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    } else {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
+  if (!token) {
+    // Redirect to login if no token is present
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
   }
   
-  // If user is authenticated and tries to access a public route, redirect to dashboard
-  if (token && isPublicRoute) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  try {
+    // Verify the token
+    await verifyToken(token);
+    return NextResponse.next();
+  } catch (error) {
+    // If token is invalid, redirect to login
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
   }
-  
-  // If user is not authenticated and tries to access a protected route, redirect to login
-  if (!token && !isPublicRoute) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-  
-  // Allow the request to proceed
-  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - public folder
      */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    "/((?!_next/static|_next/image|favicon.ico|public).*)",
   ],
 }; 

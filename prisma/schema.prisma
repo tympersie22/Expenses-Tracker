@@ -6,42 +6,51 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String     @id @default(uuid())
-  name      String
-  email     String     @unique
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  expenses  Expense[]
-  accounts  Account[]
+  id                String    @id @default(cuid())
+  email             String    @unique
+  password          String
+  firstName         String?
+  lastName          String?
+  phone             String?
+  emailVerified     Boolean   @default(false)
+  twoFactorEnabled  Boolean   @default(false)
+  failedAttempts    Int       @default(0)
+  lastFailedAttempt DateTime?
+  lockedUntil       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  accounts          Account[]
+  sessions          Session[]
 }
 
 model Account {
-  id        String     @id @default(uuid())
-  name      String
-  type      String
-  balance   Float      @default(0)
-  userId    String
-  user      User       @relation(fields: [userId], references: [id])
-  expenses  Expense[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
 }
 
-model Expense {
-  id          String    @id @default(uuid())
-  amount      Float
-  description String
-  category    String
-  date        DateTime  @default(now())
-  userId      String
-  accountId   String
-  user        User      @relation(fields: [userId], references: [id])
-  account     Account   @relation(fields: [accountId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 } 

@@ -34,8 +34,8 @@ interface UserProfile {
 export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile>({
-    name: 'Mbwana Ally',
-    email: 'mbwanaally1088@icloud.com',
+    name: 'John Doe',
+    email: 'Johndoe@example.com',
     currency: 'USD',
     notifications: true,
     theme: 'system',
