@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: expenses-tracker
+    runtime: node
+    plan: free
+    branch: work
+    autoDeploy: true
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: PLAID_CLIENT_ID
+        sync: false
+      - key: PLAID_SECRET
+        sync: false
+      - key: PLAID_ENV
+        value: sandbox
