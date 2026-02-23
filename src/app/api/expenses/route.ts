@@ -1,27 +1,32 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { amount, description, category } = body;
+    const parsedAmount = Number.parseFloat(String(amount));
 
-    // For demo purposes, we'll use a hardcoded user ID
-    // In a real app, this would come from the authenticated user's session
-    const userId = '1';
-    const accountId = '1';
+    if (!description || !category || Number.isNaN(parsedAmount)) {
+      return NextResponse.json(
+        { error: 'Invalid payload. Expected amount, description, and category.' },
+        { status: 400 }
+      );
+    }
 
-    const expense = await prisma.expense.create({
-      data: {
-        amount: parseFloat(amount),
-        description,
-        category,
-        userId,
-        accountId,
+    // Temporary response while CSV-first transaction storage is used.
+    return NextResponse.json(
+      {
+        message: 'Expense endpoint is not connected to a Prisma Expense model yet.',
+        expense: {
+          id: `temp-${Date.now()}`,
+          amount: parsedAmount,
+          description: String(description),
+          category: String(category),
+          createdAt: new Date().toISOString(),
+        },
       },
-    });
-
-    return NextResponse.json(expense);
+      { status: 202 }
+    );
   } catch (error) {
     console.error('Failed to create expense:', error);
     return NextResponse.json(
