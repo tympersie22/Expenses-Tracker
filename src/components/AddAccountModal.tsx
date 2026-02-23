@@ -17,7 +17,7 @@ export default function AddAccountModal({ isOpen, onClose }: AddAccountModalProp
     {
       id: 'bank',
       title: 'Connect Bank Account',
-      description: 'Securely link your bank account using Plaid',
+      description: 'Securely link your bank account using Mono',
       icon: BuildingLibraryIcon,
       action: () => setSelectedOption('bank'),
     },

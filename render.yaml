@@ -14,9 +14,9 @@ services:
         sync: false
       - key: JWT_SECRET_KEY
         sync: false
-      - key: PLAID_CLIENT_ID
+      - key: MONO_PUBLIC_KEY
         sync: false
-      - key: PLAID_SECRET
+      - key: MONO_SECRET_KEY
         sync: false
-      - key: PLAID_ENV
+      - key: MONO_ENV
         value: sandbox

@@ -3,7 +3,8 @@ const nextConfig = {
   reactStrictMode: true,
   // Ensure environment variables are properly exposed to the client
   env: {
-    PLAID_ENV: process.env.PLAID_ENV,
+    MONO_ENV: process.env.MONO_ENV,
+    MONO_PUBLIC_KEY: process.env.MONO_PUBLIC_KEY,
   },
   // Configure webpack to handle any issues with dependencies
   webpack: (config, { isServer }) => {

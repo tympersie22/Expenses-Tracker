@@ -5,7 +5,6 @@ import {
   BanknotesIcon,
   PlusCircleIcon,
   CreditCardIcon,
-  ArrowPathIcon,
   ChevronRightIcon,
   XMarkIcon,
   PlusIcon,
@@ -27,25 +26,7 @@ import {
 } from '@heroicons/react/24/outline';
 import AddAccountModal from '../../components/AddAccountModal';
 import AccountDetails from '../../components/AccountDetails';
-import ClientOnly from '../../components/ClientOnly';
-import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-
-// Dynamically import PlaidLink with no SSR to avoid hydration errors
-const PlaidLink = dynamic(() => import('../../components/PlaidLink'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full">
-      <button
-        disabled
-        className="flex items-center justify-center gap-2 w-full bg-gray-400 text-white py-2 px-4 rounded-lg cursor-not-allowed transition-colors"
-      >
-        <ArrowPathIcon className="w-5 h-5" />
-        <span className="text-sm font-medium">Loading...</span>
-      </button>
-    </div>
-  ),
-});
 
 interface Account {
   id: string;

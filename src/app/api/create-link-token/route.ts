@@ -1,105 +1,59 @@
 import { NextResponse } from 'next/server';
-import { Configuration, PlaidApi, PlaidEnvironments, CountryCode, Products } from 'plaid';
-
-// Log environment variables (without exposing secrets)
-console.log('PLAID_ENV:', process.env.PLAID_ENV || 'sandbox');
-console.log('PLAID_CLIENT_ID exists:', !!process.env.PLAID_CLIENT_ID);
-console.log('PLAID_SECRET exists:', !!process.env.PLAID_SECRET);
-
-// Check if required environment variables are set
-if (!process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET) {
-  console.error('Missing required Plaid environment variables');
-}
-
-const configuration = new Configuration({
-  basePath: PlaidEnvironments[process.env.PLAID_ENV || 'sandbox'],
-  baseOptions: {
-    headers: {
-      'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID || '',
-      'PLAID-SECRET': process.env.PLAID_SECRET || '',
-    },
-  },
-});
-
-const plaidClient = new PlaidApi(configuration);
 
 export async function POST() {
   try {
-    // Check if required environment variables are set
-    if (!process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET) {
+    const secretKey = process.env.MONO_SECRET_KEY;
+    if (!secretKey) {
       return NextResponse.json(
-        { error: 'Missing required Plaid environment variables' },
+        { error: 'Missing required Mono environment variable: MONO_SECRET_KEY' },
         { status: 500 }
       );
     }
 
-    console.log('Creating link token...');
-    
-    const request = {
-      user: { client_user_id: 'unique-user-id' },
-      client_name: 'Expense Tracker',
-      products: ['auth', 'transactions'] as Products[],
-      country_codes: ['US' as CountryCode],
-      language: 'en',
+    const monoEnv = process.env.MONO_ENV || 'sandbox';
+    const monoApiBaseUrl =
+      monoEnv === 'live' || monoEnv === 'production'
+        ? 'https://api.withmono.com'
+        : 'https://api.withmono.com';
+
+    // Mono supports initiating a hosted account-linking session from the backend.
+    const payload = {
+      account: 'all',
+      customer: {
+        name: 'Expense Tracker User',
+      },
+      meta: {
+        ref: `exp-${Date.now()}`,
+      },
     };
 
-    console.log('Request:', JSON.stringify(request, null, 2));
-    
-    try {
-      const createTokenResponse = await plaidClient.linkTokenCreate(request);
-      console.log('Link token created successfully');
-      
-      return NextResponse.json({
-        link_token: createTokenResponse.data.link_token,
-      });
-    } catch (plaidError: any) {
-      console.error('Plaid API error:', plaidError);
-      
-      // Extract error details from Plaid error
-      let errorMessage = 'Failed to create link token';
-      let errorDetails = '';
-      
-      if (plaidError instanceof Error) {
-        errorMessage = plaidError.message;
-        errorDetails = plaidError.stack || '';
-      } else if (plaidError.response && plaidError.response.data) {
-        // Handle Axios error with Plaid response
-        errorMessage = plaidError.response.data.error_message || 'Plaid API error';
-        errorDetails = JSON.stringify(plaidError.response.data);
-      } else {
-        errorDetails = String(plaidError);
-      }
-      
+    const monoResponse = await fetch(`${monoApiBaseUrl}/v2/accounts/initiate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'mono-sec-key': secretKey,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await monoResponse.json();
+    if (!monoResponse.ok) {
       return NextResponse.json(
-        { 
-          error: errorMessage, 
-          details: errorDetails,
-          message: 'Please check your Plaid credentials and try again'
-        },
-        { status: 500 }
+        { error: data.message || data.error || 'Failed to start Mono linking', details: data },
+        { status: monoResponse.status }
       );
     }
+
+    return NextResponse.json({
+      mono_url: data.mono_url || data.link || data.url || null,
+      session_id: data.id || data.session_id || null,
+      raw: data,
+    });
   } catch (error) {
-    console.error('Error creating link token:', error);
-    
-    // Provide more detailed error information
-    let errorMessage = 'Failed to create link token';
-    let errorDetails = '';
-    
-    if (error instanceof Error) {
-      errorMessage = error.message;
-      errorDetails = error.stack || '';
-    } else {
-      errorDetails = String(error);
-    }
-    
+    const message = error instanceof Error ? error.message : 'Failed to start Mono linking';
     return NextResponse.json(
-      { 
-        error: errorMessage, 
-        details: errorDetails,
-        message: 'Please check your Plaid credentials and try again'
-      },
+      { error: message },
       { status: 500 }
     );
   }
-} 
+}
