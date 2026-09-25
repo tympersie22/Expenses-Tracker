@@ -8,7 +8,7 @@ Validate this worksheet against production traffic and Xcode's privacy report im
 | Name | Yes | No | App functionality and profile display |
 | Other financial information | Yes | No | Accounts, transactions, budgets, goals, bills, imports, reconciliation, and forecasts |
 | User ID | Yes | No | Authentication, ownership enforcement, abuse prevention, and support |
-| Crash and performance data | Pseudonymous | No | Reliability, security, and diagnosis |
+| Crash and performance data | Yes (pseudonymous account association) | No | Reliability, security, and diagnosis |
 
 Receipt images, PDFs, and recognized raw text are processed temporarily on the iOS device in this release. Only transaction fields the user chooses to save are sent to the server. The app does not use advertising, third-party tracking, data brokers, precise location, contacts, health data, or payment-card credentials.
 

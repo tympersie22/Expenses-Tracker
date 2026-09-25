@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, re, sys
+import os, re, sys, ipaddress
 from urllib.parse import urlsplit
 errors = []
 for key in ['EXPENSES_TRACKER_API_URL','EXPENSES_TRACKER_PUBLIC_URL']:
@@ -10,7 +10,12 @@ for key in ['EXPENSES_TRACKER_API_URL','EXPENSES_TRACKER_PUBLIC_URL']:
         valid = url.scheme == 'https' and host and url.path in ('', '/') and not url.query and not url.fragment and not url.username and not url.password
         # Validation builds may use reserved test domains. Signed releases may not.
         if os.environ.get('RELEASE_ACTION') != 'validate':
-            valid = valid and host != 'localhost' and not host.endswith(('.invalid','.test','.example','.local')) and host not in ('example.com','example.org','example.net') and not host.endswith(('.example.com','.example.org','.example.net'))
+            try:
+                ipaddress.ip_address(host)
+                valid = False  # Production origins use the approved DNS name.
+            except ValueError:
+                pass
+            valid = valid and host != 'localhost' and not host.endswith(('.invalid','.test','.example','.local','.localhost')) and host not in ('example.com','example.org','example.net') and not host.endswith(('.example.com','.example.org','.example.net'))
         if not valid: errors.append(key + ' must be a public HTTPS origin')
     except ValueError: errors.append(key + ' is invalid')
 if not re.fullmatch(r'[1-9][0-9]*',os.environ.get('EXPENSES_TRACKER_BUILD_NUMBER','1')): errors.append('EXPENSES_TRACKER_BUILD_NUMBER must be a positive integer')

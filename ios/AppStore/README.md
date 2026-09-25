@@ -21,7 +21,15 @@ Provide a dedicated App Review account through App Store Connect. Do not use the
 
 ## Required screenshot set
 
-The `Screenshots/en-US` folder contains verified 1206 × 2622 captures of the welcome, today, and activity screens using fictional UI-test data. Before submission, capture the financial inbox, forecast/plans, accounts, receipt review, and privacy/security settings on every size currently required by App Store Connect. Capture the corresponding Kiswahili set after final copy review. Use a purpose-built review account with fictional records and no real person’s information.
+The screenshot folders contain simulator captures using fictional records. These are submission candidates, not proof of App Store acceptance. Match the final uploaded build and the sizes requested in App Store Connect; capture any missing sizes with `ExpensesTrackerUITests/testReleaseScreenshots`. The test creates isolated records and deletes its account after capture. Human Kiswahili copy review and real-device acceptance remain required.
+
+## Release workflow
+
+`ios/scripts/archive-release.sh validate` creates an unsigned physical-device Release archive without contacting Apple. It needs HTTPS API/public origins; reserved example hosts are accepted only in validation mode. `archive` exports a signed IPA; `upload` submits to App Store Connect. Both reject placeholder hosts and require the distribution team and signing access.
+
+The manual **iOS release archive** workflow uses the protected `app-store` environment. Set variables `EXPENSES_TRACKER_API_URL`, `EXPENSES_TRACKER_PUBLIC_URL` and `APPLE_TEAM_ID`. Store the distribution certificate and App Store API key only as secrets: `APPLE_DISTRIBUTION_P12_BASE64`, `APPLE_DISTRIBUTION_P12_PASSWORD`, `APP_STORE_CONNECT_KEY_BASE64`, `APP_STORE_CONNECT_KEY_ID` and `APP_STORE_CONNECT_ISSUER_ID`. Never commit signing material. The workflow uses a temporary keychain and removes credentials afterwards.
+
+Archive validation succeeded locally on 25 September 2026 without signing. Distribution signing, upload and TestFlight installation remain unverified until Apple access and real server origins are configured.
 
 ## Submission gate
 
