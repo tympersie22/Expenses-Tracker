@@ -1,109 +1,63 @@
 # Expenses Tracker
 
-A modern, user-friendly expense tracking application built with Next.js, TypeScript, and Tailwind CSS. This application helps users manage their finances by tracking expenses, generating reports, and providing insights into their spending habits.
+A real personal-finance application built with Next.js, TypeScript, Prisma, and PostgreSQL. Create a private account, record financial accounts and transactions, reconcile CSV statements in a persistent Financial Inbox, set budgets, reserve savings goals, and track bills. Statement rows are reviewed before they reach the ledger, with duplicate matching and closing-balance checks. All financial data persists in PostgreSQL.
 
-![Expenses Tracker Screenshot](public/profile-placeholder.jpg)
+## Local setup
+
+Requires Node.js 20.9+ and PostgreSQL 14+.
+
+```sh
+npm ci
+cp .env.example .env
+# Configure DATABASE_URL for your own PostgreSQL database.
+# APP_ORIGIN must match the exact browser origin.
+npm run db:generate
+npm run db:migrate
+npm run dev -- --port 3120
+```
+
+Open http://localhost:3120 and create your account. For a new local PostgreSQL instance, `docker compose up -d db` starts an isolated development database on port 5437. Use the connection string shown in `.env.example`. Existing local PostgreSQL also works.
+
+The prototype in `design/` is a separate historical design study. The real application is in `src/`.
 
 ## Features
 
-- 📊 **Financial Reports**: Visualize your income and expenses with interactive charts
-- 💰 **Expense Management**: Add, edit, and categorize expenses
-- 🔔 **Smart Notifications**: Get alerts for unusual spending patterns
-- 🔒 **Security Features**: Two-factor authentication and biometric login support
-- 📱 **Responsive Design**: Works seamlessly on desktop and mobile devices
-- 🎨 **Modern UI**: Clean and intuitive interface with smooth animations
+- Signup, email verification, login, password recovery, TOTP MFA, recovery codes, session revocation, and password change.
+- Accounts in original currencies with exact minor-unit amounts.
+- Income, expenses, atomic same-currency transfers, and auditable removal.
+- CSV preview, validation, duplicate detection, transactional import, transaction CSV export, and complete JSON account export.
+- Per-category monthly budgets, account-backed savings reservations, and dated bills.
+- Consistent available-to-spend calculations, purchase scenarios, amount hiding, and responsive layouts.
+- Time-zone-aware calendar dates and preferences.
+- Account rename/closure, history-preserving transaction correction, in-app deletion, and an encrypted iOS offline read cache.
 
-## Tech Stack
+Accounts are manually maintained. No bank synchronization, live FX, or money transmission is represented as available. Each currency has a separate overview.
 
-- **Framework**: Next.js 14
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Animations**: Framer Motion
-- **Charts**: Recharts
-- **Icons**: Heroicons
+## Verification
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18.0 or higher
-- npm or yarn
-
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/tympersie22/Expenses-Tracker.git
-   ```
-
-2. Navigate to the project directory:
-   ```bash
-   cd Expenses-Tracker
-   ```
-
-3. Install dependencies:
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
-
-4. Start the development server:
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   ```
-
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Project Structure
-
-```
-src/
-├── app/                    # Next.js app directory
-│   ├── accounts/          # Account management
-│   ├── add-expense/       # Expense creation
-│   ├── alerts/            # Alert preferences
-│   ├── budget/            # Budget planning
-│   ├── notifications/     # Notification center
-│   ├── reports/           # Financial reports
-│   ├── security/          # Security settings
-│   └── settings/          # User settings
-├── components/            # Reusable components
-└── contexts/              # React contexts
+```sh
+npm run typecheck
+npm run lint
+npm test
+# Create a separate database named money_well_test, then:
+DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/money_well_test npm run db:migrate
+DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/money_well_test npm run test:integration
+npm run build
+npm start -- --port 3120
 ```
 
-## Features in Detail
+Integration tests refuse to run without the dedicated test database name. They create and remove their own users and validate isolation, exact balances, idempotency, transfers, reservation limits, bill posting/reversal, duplicate imports, and rollback.
 
-### Financial Reports
-- Income vs Expenses comparison
-- Category-wise expense breakdown
-- Monthly trend analysis
-- Customizable time ranges
+## Deployment
 
-### Security
-- Two-factor authentication
-- Biometric login support
-- Password management
-- Secure session handling
+Set the production values documented in `.env.example`, run `npm ci`, `npm run build`, and `npm run db:migrate`, then `npm start`. The build packages Next.js standalone output and `npm start` runs that artifact. `render.yaml` is an opt-in deployment blueprint; no public deployment has been performed. Enable managed backups, point-in-time recovery, monitoring, email delivery, and TLS before accepting real users. Run `npm run db:prune` periodically.
 
-### Notifications
-- Customizable alert preferences
-- Real-time spending alerts
-- Budget threshold notifications
-- Payment reminders
+See [architecture and launch limits](docs/ARCHITECTURE.md) for data flows, security boundaries, financial assumptions, and unfinished integrations. This is a manual-finance application, not a bank or payment processor.
 
-## Contributing
+## Native iOS app
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+The Expenses Tracker SwiftUI app lives in [ios/](ios/README.md). Open `ios/ExpensesTracker.xcodeproj` and run the ExpensesTracker scheme on an iPhone simulator. Debug simulator builds connect to this same backend at localhost:3120.
 
-## License
+## Public launch preparation
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Contact
-
-Your Name - [@tympersie22](https://github.com/tympersie22)
-
-Project Link: [https://github.com/tympersie22/Expenses-Tracker](https://github.com/tympersie22/Expenses-Tracker) 
+Start with [owner actions](docs/OWNER_ACTIONS.md), [production readiness](docs/PRODUCTION_READINESS.md), and [local verification](docs/LAUNCH_VERIFICATION_2026-09-25.md). Use Node 22 or newer. `npm run launch:prepare` creates private local configuration without printing credentials; `npm run launch:check` lists missing settings. Production deployment and App Store distribution remain gated on hosted validation and owner-controlled accounts.

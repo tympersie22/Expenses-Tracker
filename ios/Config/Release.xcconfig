@@ -1,0 +1,4 @@
+// Supply both values from the protected release environment or a local untracked override.
+EXPENSES_TRACKER_API_URL =
+EXPENSES_TRACKER_PUBLIC_URL =
+EXPENSES_TRACKER_DEVELOPMENT_TEAM =

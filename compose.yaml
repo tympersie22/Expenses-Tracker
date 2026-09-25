@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: money_well
+      POSTGRES_PASSWORD: local-development-only
+      POSTGRES_DB: money_well
+    ports:
+      - '127.0.0.1:5437:5432'
+    volumes:
+      - money-well-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U money_well']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  money-well-data:

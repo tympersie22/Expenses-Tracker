@@ -1,0 +1,74 @@
+name: iOS release archive
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Export signed IPA or upload to TestFlight
+        type: choice
+        options: [archive, upload]
+        default: archive
+permissions:
+  contents: read
+concurrency:
+  group: ios-release
+  cancel-in-progress: false
+jobs:
+  archive:
+    runs-on: macos-15
+    environment: app-store
+    env:
+      EXPENSES_TRACKER_API_URL: ${{ vars.EXPENSES_TRACKER_API_URL }}
+      EXPENSES_TRACKER_PUBLIC_URL: ${{ vars.EXPENSES_TRACKER_PUBLIC_URL }}
+      EXPENSES_TRACKER_DEVELOPMENT_TEAM: ${{ vars.APPLE_TEAM_ID }}
+      EXPENSES_TRACKER_BUILD_NUMBER: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Install signing credentials in an isolated keychain
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.APPLE_DISTRIBUTION_P12_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DISTRIBUTION_P12_PASSWORD }}
+          APP_STORE_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64, os
+          for key, name in [('CERTIFICATE_BASE64','distribution.p12'), ('APP_STORE_KEY_BASE64','AuthKey.p8')]:
+              if not os.environ.get(key): raise SystemExit(key + ' is required')
+              path = os.path.join(os.environ['RUNNER_TEMP'], name)
+              with open(path,'wb') as f: f.write(base64.b64decode(os.environ[key], validate=True))
+              os.chmod(path,0o600)
+          PY
+          KEYCHAIN_PASSWORD="$(openssl rand -hex 32)"
+          echo "::add-mask::$KEYCHAIN_PASSWORD"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$RUNNER_TEMP/release.keychain-db"
+          security set-keychain-settings -lut 21600 "$RUNNER_TEMP/release.keychain-db"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$RUNNER_TEMP/release.keychain-db"
+          security import "$RUNNER_TEMP/distribution.p12" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$RUNNER_TEMP/release.keychain-db"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$RUNNER_TEMP/release.keychain-db"
+          security list-keychains -d user -s "$RUNNER_TEMP/release.keychain-db"
+      - name: Archive and export
+        env:
+          EXPENSES_TRACKER_RELEASE_DIR: ${{ runner.temp }}/expenses-release
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
+          RELEASE_ACTION_INPUT: ${{ inputs.action }}
+        run: bash ios/scripts/archive-release.sh "$RELEASE_ACTION_INPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: expenses-tracker-${{ github.run_number }}
+          path: |
+            ${{ runner.temp }}/expenses-release/export/*.ipa
+            ${{ runner.temp }}/expenses-release/ExpensesTracker.xcarchive/dSYMs
+          if-no-files-found: error
+          retention-days: 14
+      - name: Remove signing credentials
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/release.keychain-db" || true
+          python3 - <<'PY'
+          import os
+          for name in ['distribution.p12','AuthKey.p8']:
+              path=os.path.join(os.environ['RUNNER_TEMP'],name)
+              if os.path.exists(path): os.remove(path)
+          PY

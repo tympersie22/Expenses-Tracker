@@ -19,32 +19,38 @@ model User {
   phone             String?
   emailVerified     Boolean   @default(false)
   twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String?   @db.Text
+  twoFactorPending  String?   @db.Text
+  twoFactorRecovery String[]  @default([])
   failedAttempts    Int       @default(0)
   lastFailedAttempt DateTime?
   lockedUntil       DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
-  accounts          Account[]
+  baseCurrency      String    @default("USD")
+  timeZone          String    @default("UTC")
+  language          String    @default("en")
+  financialAccounts FinancialAccount[]
+  movements         Movement[]
+  budgets           Budget[]
+  auditEvents       AuditEvent[]
   sessions          Session[]
+  tokens            UserToken[]
+  policyAcceptances PolicyAcceptance[]
+  statementBatches  StatementBatch[]
+  recurringPatterns RecurringPattern[]
 }
 
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
+model PolicyAcceptance {
+  id            String   @id @default(cuid())
+  userId        String
+  policyVersion String
+  policyType    String
+  acceptedAt    DateTime @default(now())
+  ipHash        String?
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, policyVersion, policyType])
+  @@index([userId, acceptedAt])
 }
 
 model Session {
@@ -52,5 +58,208 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
+  createdAt    DateTime @default(now())
+  lastSeenAt   DateTime @default(now())
+  userAgent    String?
+  ipHash       String?
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-} 
+  @@index([userId])
+  @@index([expires])
+}
+
+model UserToken {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, type])
+  @@index([expiresAt])
+}
+
+// Financial accounts are separate from the legacy OAuth Account table.
+model FinancialAccount {
+  id        String @id @default(cuid())
+  userId    String
+  name      String
+  kind      String
+  currency  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  archivedAt DateTime?
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries   LedgerEntry[]
+  goals     Goal[]
+  bills     Bill[]
+  statementBatches StatementBatch[]
+  recurringPatterns RecurringPattern[]
+  @@unique([id, userId])
+  @@index([userId, currency])
+}
+
+model Movement {
+  id             String @id @default(cuid())
+  userId         String
+  kind           String
+  description    String
+  category       String
+  occurredOn     DateTime @db.Date
+  idempotencyKey String
+  requestHash    String
+  importHash     String?
+  voidedAt       DateTime?
+  correctedFromId String? @unique
+  createdAt      DateTime @default(now())
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries        LedgerEntry[]
+  bill           Bill?
+  statementSuggestions StatementItem[] @relation("StatementSuggestion")
+  statementMatches StatementItem[] @relation("StatementMatch")
+  statementPosts StatementItem[] @relation("StatementPost")
+  correctedFrom Movement? @relation("MovementCorrection", fields: [correctedFromId], references: [id], onDelete: SetNull)
+  correction Movement? @relation("MovementCorrection")
+  @@unique([id, userId])
+  @@unique([userId, idempotencyKey])
+  @@unique([userId, importHash])
+  @@index([userId, occurredOn])
+}
+
+model LedgerEntry {
+  id         String @id @default(cuid())
+  userId     String
+  accountId  String
+  movementId String
+  amount     BigInt
+  account    FinancialAccount @relation(fields: [accountId, userId], references: [id, userId], onDelete: Cascade)
+  movement   Movement @relation(fields: [movementId, userId], references: [id, userId], onDelete: Cascade)
+  @@index([accountId, userId])
+  @@index([movementId, userId])
+}
+
+model Budget {
+  id       String @id @default(cuid())
+  userId   String
+  category String
+  currency String
+  month    String
+  limit    BigInt
+  user     User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, currency, month, category])
+}
+
+model Goal {
+  id        String @id @default(cuid())
+  userId    String
+  accountId String
+  name      String
+  target    BigInt
+  reserved  BigInt
+  account   FinancialAccount @relation(fields: [accountId, userId], references: [id, userId], onDelete: Cascade)
+  @@index([userId])
+}
+
+model Bill {
+  id         String @id @default(cuid())
+  userId     String
+  accountId  String
+  title      String
+  category   String
+  amount     BigInt
+  dueOn      DateTime @db.Date
+  paidAt     DateTime?
+  movementId String? @unique
+  account    FinancialAccount @relation(fields: [accountId, userId], references: [id, userId], onDelete: Cascade)
+  movement   Movement? @relation(fields: [movementId], references: [id])
+  @@index([userId, dueOn])
+}
+
+model AuditEvent {
+  id        String @id @default(cuid())
+  userId    String
+  action    String
+  entityId  String
+  createdAt DateTime @default(now())
+  previousHash String?
+  eventHash String? @unique
+  hashVersion Int @default(1)
+  detail Json?
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
+}
+
+model RateLimit {
+  key       String @id
+  count     Int
+  expiresAt DateTime
+  @@index([expiresAt])
+}
+
+model StatementBatch {
+  id               String   @id @default(cuid())
+  userId           String
+  accountId        String
+  fileName         String
+  sourceHash       String
+  statementDate    DateTime @db.Date
+  closingBalance   BigInt?
+  createdAt        DateTime @default(now())
+  user             User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account          FinancialAccount @relation(fields: [accountId, userId], references: [id, userId], onDelete: Cascade)
+  items            StatementItem[]
+  @@index([userId, createdAt])
+  @@unique([userId, sourceHash])
+  @@index([accountId, userId])
+}
+
+model StatementItem {
+  id                String   @id @default(cuid())
+  batchId           String
+  rowNumber         Int
+  occurredOn        DateTime @db.Date
+  description       String
+  category          String
+  kind              String
+  amount            BigInt
+  fingerprint       String
+  status            String   @default("pending")
+  suggestedMatchId  String?
+  matchedMovementId String?
+  postedMovementId  String?
+  createdAt         DateTime @default(now())
+  batch             StatementBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  suggestedMatch    Movement? @relation("StatementSuggestion", fields: [suggestedMatchId], references: [id], onDelete: SetNull)
+  matchedMovement   Movement? @relation("StatementMatch", fields: [matchedMovementId], references: [id], onDelete: SetNull)
+  postedMovement    Movement? @relation("StatementPost", fields: [postedMovementId], references: [id], onDelete: SetNull)
+  @@unique([batchId, rowNumber])
+  @@index([batchId, status])
+  @@index([fingerprint])
+}
+
+model RecurringPattern {
+  id             String   @id @default(cuid())
+  userId         String
+  accountId      String
+  sourceKey      String
+  title          String
+  category       String
+  kind           String
+  cadence        String
+  cadenceDays    Int
+  typicalAmount  BigInt
+  minimumAmount  BigInt
+  maximumAmount  BigInt
+  evidenceCount  Int
+  lastObservedOn DateTime @db.Date
+  nextDueOn      DateTime @db.Date
+  status         String   @default("suggested")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account        FinancialAccount @relation(fields: [accountId, userId], references: [id, userId], onDelete: Cascade)
+  @@unique([userId, sourceKey])
+  @@index([userId, status, nextDueOn])
+  @@index([accountId, userId])
+}

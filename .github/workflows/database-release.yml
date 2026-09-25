@@ -1,0 +1,47 @@
+name: Database release
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Destination with isolated migration credentials
+        type: choice
+        options: [staging-database, production-database]
+        default: staging-database
+      runtime_role:
+        description: Existing non-owner application database role
+        type: string
+        default: expenses_tracker_runtime
+      backup_confirmed:
+        description: A current backup and tested recovery procedure are available
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: database-${{ inputs.environment }}
+  cancel-in-progress: false
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Require recovery readiness
+        env:
+          BACKUP_CONFIRMED: ${{ inputs.backup_confirmed }}
+        run: test "$BACKUP_CONFIRMED" = true
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Apply migrations and restricted runtime grants
+        env:
+          DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+          RUNTIME_ROLE: ${{ inputs.runtime_role }}
+        run: |
+          set -euo pipefail
+          test -n "$DATABASE_URL"
+          [[ "$RUNTIME_ROLE" =~ ^[a-z_][a-z0-9_]{0,62}$ ]]
+          npm run db:migrate
+          psql "$DATABASE_URL" --set=ON_ERROR_STOP=1 --set=runtime_role="$RUNTIME_ROLE" --file=scripts/configure-runtime-role.sql

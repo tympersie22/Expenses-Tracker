@@ -1,27 +1,17 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import type { Metadata } from "next";
 import "./globals.css";
-import MainContent from '@/components/MainContent';
-
-const inter = Inter({ subsets: ["latin"] });
-
 export const metadata: Metadata = {
-  title: "Expense Tracker",
-  description: "Track your daily, weekly, and monthly expenses",
+  title: "Expenses Tracker — Your money, made clear",
+  description: "Personal accounts, spending and plans, in one clear picture.",
 };
-
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} bg-gray-50`}>
-        <MainContent>
-          {children}
-        </MainContent>
-      </body>
+    <html lang="en">
+      <body>{children}</body>
     </html>
   );
-} 
+}
