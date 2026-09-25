@@ -1,6 +1,6 @@
 # What the owner needs to do
 
-Prepared 25 September 2026. The app has passed local release checks; it has not been deployed to production or approved by Apple. Source-code readiness is not proof of a hosted release.
+Updated 26 September 2026. The app has passed local release checks and all four GitHub CI jobs; it has not been deployed to production or approved by Apple. Source-code readiness is not proof of a hosted release.
 
 ## 1. Supply the business decisions
 
