@@ -1,5 +1,11 @@
 name: Application checks
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+concurrency:
+  group: application-checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -64,7 +70,6 @@ jobs:
   ios:
     runs-on: macos-15
     env:
-      DATABASE_URL: postgresql://localhost:5432/money_well_ui_test
       APP_ORIGIN: http://localhost:3120
       PORT: 3120
       HOSTNAME: "::"
@@ -83,6 +88,7 @@ jobs:
           "$(brew --prefix postgresql@16)/bin/initdb" -D /tmp/expenses-tracker-postgres
           "$(brew --prefix postgresql@16)/bin/pg_ctl" -D /tmp/expenses-tracker-postgres -l /tmp/expenses-tracker-postgres.log start
           "$(brew --prefix postgresql@16)/bin/createdb" money_well_ui_test
+          echo "DATABASE_URL=postgresql://$(id -un)@localhost:5432/money_well_ui_test" >> "$GITHUB_ENV"
       - name: Create temporary test secrets
         run: |
           APP_ENCRYPTION_KEY="$(openssl rand -base64 32)"
