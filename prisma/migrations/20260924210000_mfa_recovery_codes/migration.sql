@@ -1,0 +1,1 @@
+ALTER TABLE "User" ADD COLUMN "twoFactorRecovery" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];

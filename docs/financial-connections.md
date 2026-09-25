@@ -1,0 +1,9 @@
+# Financial connections
+
+Expenses Tracker currently stores user-created accounts, transactions, plans and CSV imports in its own ledger. An account marked "bank" or "mobile money" is manually maintained; it is not a live provider connection. The iOS app can scan a receipt or invoice locally and opens an editable transaction before it is saved.
+
+Live connections need a provider contract, credentials, consent, and a tested production data flow. We have no provider credentials yet. Do not enable a connection control or describe a feed as live until its adapter can fetch data, handle revocation and refresh, avoid duplicate ledger entries, and reconcile currencies and account identity. Tokens must be encrypted server-side and never shipped in the iOS app.
+
+For Tanzania, [M-Pesa Business](https://business.m-pesa.com/developers/) and the [Airtel Tanzania developer portal](https://developers.airtel.co.tz/home) publish business payment capabilities. Those are not a general API to read a consumer's personal wallet history. [NMB's API sandbox](https://obp-api-sandbox.nmbbank.co.tz/?locale=en_GB) publishes account, card and transaction capabilities for evaluation; live access still requires the bank's approval. For global bank and card aggregation, the provider must be selected per country: for example [Plaid Transactions](https://plaid.com/docs/transactions/) works through a consent flow, but [Plaid Link country coverage](https://plaid.com/docs/api/link/) does not include Tanzania.
+
+The next integration milestone is to select a bank-data provider and a Tanzanian bank partner, obtain sandbox and production access, then implement a provider-specific consent callback, encrypted token store, cursor-based sync, idempotent import and disconnect flow. Until then, CSV import remains the working path for statement transactions.

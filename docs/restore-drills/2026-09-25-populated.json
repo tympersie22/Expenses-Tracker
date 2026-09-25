@@ -1,0 +1,66 @@
+{
+  "occurredAt": "2026-09-25T10:36:53.951Z",
+  "kind": "local-populated-logical-restore",
+  "passed": true,
+  "restoreAndVerificationMs": 1074,
+  "totalMs": 4638,
+  "before": {
+    "mode": "seed",
+    "counts": {
+      "users": 2,
+      "accounts": 4,
+      "movements": 9,
+      "entries": 10,
+      "budgets": 1,
+      "goals": 1,
+      "bills": 2,
+      "audit": 14
+    },
+    "balances": [
+      {
+        "currency": "USD",
+        "balance": "141766"
+      },
+      {
+        "currency": "JPY",
+        "balance": "12000"
+      },
+      {
+        "currency": "KWD",
+        "balance": "123456"
+      }
+    ],
+    "digest": "c983d03a9d1236cdd5c8def4827e2107165cf287eadad3b9df24a9a595ef1cf3",
+    "auditEventsVerified": 14
+  },
+  "after": {
+    "mode": "verify",
+    "counts": {
+      "users": 2,
+      "accounts": 4,
+      "movements": 9,
+      "entries": 10,
+      "budgets": 1,
+      "goals": 1,
+      "bills": 2,
+      "audit": 14
+    },
+    "balances": [
+      {
+        "currency": "USD",
+        "balance": "141766"
+      },
+      {
+        "currency": "JPY",
+        "balance": "12000"
+      },
+      {
+        "currency": "KWD",
+        "balance": "123456"
+      }
+    ],
+    "digest": "c983d03a9d1236cdd5c8def4827e2107165cf287eadad3b9df24a9a595ef1cf3",
+    "auditEventsVerified": 14
+  },
+  "limitation": "Does not validate managed-provider PITR or production latency."
+}

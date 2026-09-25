@@ -1,14 +1,6 @@
-'use client';
-
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-
-export default function Home() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.push('/login');
-  }, [router]);
-
-  return null;
-} 
+import { redirect } from "next/navigation";
+import { currentUser } from "@/server/auth";
+export const dynamic = "force-dynamic";
+export default async function Page() {
+  redirect((await currentUser()) ? "/home" : "/login");
+}

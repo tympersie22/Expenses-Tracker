@@ -1,0 +1,7 @@
+Expenses Tracker gives you one clear place to understand the money you record.
+
+See what is available after upcoming bills and savings goals. Record income, expenses, and transfers in their original currencies. Import a statement for review, scan a receipt on your device, find recurring activity, and explore the next 30 days before you spend.
+
+Your records stay under your control. Sessions are revocable, two-factor authentication is available, and you can download a complete archive or permanently delete your account from Settings.
+
+Expenses Tracker does not move money or claim to show a live bank balance. Bank, card, and mobile-money connections are not enabled in this release.

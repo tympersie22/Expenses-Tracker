@@ -1,0 +1,1 @@
+expense,budget,money,spending,bills,savings,cash flow,receipt,finance

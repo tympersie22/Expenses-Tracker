@@ -12,6 +12,8 @@
 
 # production
 /build
+/backups/
+*.dump
 
 # misc
 .DS_Store
@@ -25,6 +27,13 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+.env.*
+!.env.example
+*.p8
+*.p12
+*.mobileprovision
+*.xcarchive/
+*.ipa
 
 # vercel
 .vercel
@@ -46,4 +55,9 @@ next-env.d.ts
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db 
+Thumbs.db
+# iOS local build and user state
+**/xcuserdata/
+**/*.xcuserstate
+/ios/DerivedData/
+/ios/build/

@@ -2,21 +2,47 @@ services:
   - type: web
     name: expenses-tracker
     runtime: node
-    plan: free
-    branch: work
-    autoDeploy: true
-    buildCommand: npm ci && npx prisma generate && npm run build
-    startCommand: npm run start
+    autoDeploy: false
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
-        value: 20
+        value: 22
       - key: DATABASE_URL
         sync: false
-      - key: JWT_SECRET_KEY
+      - key: APP_ORIGIN
         sync: false
-      - key: MONO_PUBLIC_KEY
+      - key: APP_ENCRYPTION_KEY
         sync: false
-      - key: MONO_SECRET_KEY
+      - key: RATE_LIMIT_SALT
         sync: false
-      - key: MONO_ENV
-        value: sandbox
+      - key: REQUIRE_EMAIL_VERIFICATION
+        value: "true"
+      - key: REQUIRE_PRODUCTION_CONFIG
+        value: "true"
+      - key: EMAIL_DELIVERY_MODE
+        value: resend
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: NEXT_PUBLIC_SUPPORT_EMAIL
+        sync: false
+      - key: MONITORING_WEBHOOK_URL
+        sync: false
+      - key: MONITORING_WEBHOOK_TOKEN
+        sync: false
+      - key: RELEASE_SHA
+        sync: false
+  - type: cron
+    name: expenses-tracker-prune
+    runtime: node
+    schedule: "17 3 * * *"
+    buildCommand: npm ci && npm run db:generate
+    startCommand: npm run db:prune
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: DATABASE_URL
+        sync: false
