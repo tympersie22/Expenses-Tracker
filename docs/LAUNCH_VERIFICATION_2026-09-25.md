@@ -25,4 +25,4 @@ GitHub run `36126017428` passed all four jobs for commit `2e970fd`: web verifica
 
 The local runtime was backed up, migrated and replaced with the validated standalone build; `/api/health` reports the database available. Backup/restore was also repeated successfully with Prisma-specific connection parameters stripped for PostgreSQL command-line tools. Backups and generated production secrets remain outside Git.
 
-An additional large-screen local screenshot run timed out in simulator diagnostics. This is not counted as a passing device check; screenshot coverage across all submission sizes remains pending.
+Additional local screenshot attempts stalled in simulator automation, including a large-screen run that timed out collecting diagnostics. They are not counted as passing device checks. The stored captures come from the earlier successful 1206 × 2622 English/Kiswahili journey; final recapture and coverage across all submission sizes remain pending.
