@@ -25,4 +25,4 @@ GitHub run `36126017428` passed all four jobs for commit `2e970fd`: web verifica
 
 The local runtime was backed up, migrated and replaced with the validated standalone build; `/api/health` reports the database available. Backup/restore was also repeated successfully with Prisma-specific connection parameters stripped for PostgreSQL command-line tools. Backups and generated production secrets remain outside Git.
 
-Additional local screenshot attempts stalled in simulator automation, including a large-screen run that timed out collecting diagnostics. They are not counted as passing device checks. The stored captures come from the earlier successful 1206 × 2622 English/Kiswahili journey; final recapture and coverage across all submission sizes remain pending.
+The additional large-screen screenshot run timed out collecting simulator diagnostics. A retry on the working iPhone simulator passed both languages; current 1206 × 2622 captures are stored in `ios/AppStore/Screenshots`. All required submission sizes and real-device acceptance still need validation.

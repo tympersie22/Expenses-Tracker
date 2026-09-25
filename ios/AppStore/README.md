@@ -21,7 +21,7 @@ Provide a dedicated App Review account through App Store Connect. Do not use the
 
 ## Required screenshot set
 
-The screenshot folders contain 1206 × 2622 simulator captures using fictional records, from the successful 25 September capture run. A later localization pass changed some picker labels; recapture those before submission. These are submission candidates, not proof of App Store acceptance. Match the final uploaded build and the sizes requested in App Store Connect; capture any missing sizes with `ExpensesTrackerUITests/testReleaseScreenshots`. The test creates isolated records and deletes its account after capture. Human Kiswahili copy review and real-device acceptance remain required.
+The screenshot folders contain 1206 × 2622 simulator captures using fictional records, from the successful final 25 September capture run, including the updated localized picker labels. These are submission candidates, not proof of App Store acceptance. Match the final uploaded build and the sizes requested in App Store Connect; capture any missing sizes with `ExpensesTrackerUITests/testReleaseScreenshots`. The test creates isolated records and deletes its account after capture. Human Kiswahili copy review and real-device acceptance remain required.
 
 ## Release workflow
 
